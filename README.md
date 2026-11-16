@@ -3,61 +3,85 @@
 ## Project Description
 Inventra is an intelligent inventory management system designed to simplify stock tracking, optimize warehouse operations, and boost customer engagement. It combines real-time inventory monitoring with data-driven insights, helping businesses avoid shortages, reduce wastage, and improve efficiency.
 
-For business owners, Inventra provides automated low-stock alerts, supplier management, and sales analytics to make smarter decisions
+For business owners, Inventra provides automated low-stock alerts, supplier management, and sales analytics to make smarter decisions.
 
 ## Technologies Used
-- Backend: Spring Boot
-- Frontend: React.js
-- Database: MySQL
-- Authentication: JWT
-- Tools: Visual Studio Code, IntelliJ IDEA, Postman
+- **Backend:** Spring Boot 3.4 (Java 21), Spring Data JPA, Spring Security, JWT, Spring Boot Actuator
+- **Frontend:** React 19, Vite, Axios, Recharts
+- **Database:** MySQL 8.0
+- **DevOps & Cloud:** Docker, Docker Compose, Kubernetes, Helm 3, Nginx
+- **CI/CD & DevSecOps:** GitHub Actions, Aqua Security Trivy, GitHub Container Registry (GHCR)
 
-## How to Run the Project
+---
+
+## 🚀 DevOps & Containerized Quickstart
+
+Full documentation and architectural details are available in [DEVOPS.md](file:///D:/devop%20capstone/DEVOPS.md).
+
+### Run with Docker Compose (Recommended)
+
+Run the entire application stack (MySQL + Spring Boot Backend + React Frontend/Nginx) with a single command:
+
+```bash
+# 1. Copy the environment configuration
+cp .env.example .env
+
+# 2. Build and launch all services
+docker compose up -d --build
+```
+
+- **Frontend:** [http://localhost:3000](http://localhost:3000)
+- **Backend API:** [http://localhost:5050/api](http://localhost:5050/api)
+- **Health Probes:** [http://localhost:5050/actuator/health](http://localhost:5050/actuator/health)
+
+To stop the containers:
+```bash
+docker compose down
+```
+
+---
+
+### Deploy to Kubernetes
+
+Deploy production-ready manifests with Kustomize:
+
+```bash
+kubectl apply -k k8s/
+```
+
+Or deploy using the included **Helm chart**:
+
+```bash
+helm upgrade --install inventra ./helm/inventra --namespace inventra --create-namespace
+```
+
+---
+
+## 🛠️ Local Development (Without Docker)
 
 ### Prerequisites
-- Node.js and npm
-- Java JDK 17+
-- MySQL server running
-- Maven
+- Java JDK 21+
+- Node.js 20+ and npm
+- MySQL Server 8.0 running on `localhost:3306`
+- Maven 3.9+
 
-
-### Steps to Run/Execute the Project
-## Prerequisites
- -Before running the project, make sure you have the following installed:
- -Java JDK 17 or above
- -Node.js and npm
- -MySQL Server
- -Maven
- -Git
-
-### Step 1 Clone the Repository
-git clone https://github.com/FurLoop/Inventra.git
+### Step 1: Clone the Repository
+```bash
+git clone https://github.com/Aditi-saraswat22/Inventra.git
 cd Inventra
+```
 
-### Step 2 Set Up the Backend
-cd backend
-   ## Open src/main/resources/application.properties
+### Step 2: Set Up & Run the Backend
+```bash
+cd backend/InventoryMgtSys
+mvn spring-boot:run
+```
+*Backend runs on port `5050`.*
 
- ## Update the database username, password, and schema name
-  -spring.datasource.username=your_mysql_username
-  -spring.datasource.password=your_mysql_password
-  -spring.datasource.url=jdbc:mysql://localhost:3306/your_database_name
-
-### Step 3 Run the backend
-  - mvn spring-boot:run
-
-### Step 4 Set Up the Frontend
-  - cd ../frontend
-
-### Step 5 Install dependencies
-  - npm install
-
-### Step 6 Start the frontend server
-  - npm start
-
- ## Frontend will run at http://localhost:5173
-
-### Step 7  Access the Application
-  - Open your browser and go to:
-  - http://localhost:5173
-
+### Step 3: Set Up & Run the Frontend
+```bash
+cd ../../frontend
+npm install
+npm run dev
+```
+*Frontend runs on [http://localhost:5173](http://localhost:5173).*

@@ -1,0 +1,61 @@
+# Default values for inventra Helm Chart
+
+global:
+  environment: production
+
+mysql:
+  enabled: true
+  image:
+    repository: mysql
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+  rootPassword: "admin123"
+  database: "ims_db"
+  persistence:
+    size: 5Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 1Gi
+
+backend:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/aditi-saraswat22/inventra-backend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  port: 5050
+  jwtSecret: "yourSuperSecretKeyThatIsAtLeast32CharactersLong!"
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+frontend:
+  replicaCount: 2
+  image:
+    repository: ghcr.io/aditi-saraswat22/inventra-frontend
+    tag: "latest"
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 80
+    nodePort: 30080
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+ingress:
+  enabled: true
+  className: nginx
+  host: inventra.local

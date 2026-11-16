@@ -1,0 +1,91 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "inventra.fullname" . }}-backend
+  labels:
+    {{- include "inventra.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+type: Opaque
+stringData:
+  SPRING_DATASOURCE_PASSWORD: {{ .Values.mysql.rootPassword | quote }}
+  JWT_SECRET: {{ .Values.backend.jwtSecret | quote }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "inventra.fullname" . }}-backend
+  labels:
+    {{- include "inventra.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+data:
+  SERVER_PORT: {{ .Values.backend.port | quote }}
+  SPRING_DATASOURCE_URL: "jdbc:mysql://{{ include "inventra.fullname" . }}-mysql:3306/{{ .Values.mysql.database }}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+  SPRING_DATASOURCE_USERNAME: "root"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "inventra.fullname" . }}-backend
+  labels:
+    {{- include "inventra.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: {{ include "inventra.fullname" . }}-backend
+  template:
+    metadata:
+      labels:
+        app: {{ include "inventra.fullname" . }}-backend
+    spec:
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.backend.port }}
+              name: http
+          envFrom:
+            - configMapRef:
+                name: {{ include "inventra.fullname" . }}-backend
+            - secretRef:
+                name: {{ include "inventra.fullname" . }}-backend
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: {{ .Values.backend.port }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: {{ .Values.backend.port }}
+            initialDelaySeconds: 45
+            periodSeconds: 15
+            timeoutSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "inventra.fullname" . }}-backend
+  labels:
+    {{- include "inventra.labels" . | nindent 4 }}
+    app.kubernetes.io/component: api
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.backend.port }}
+      targetPort: {{ .Values.backend.port }}
+      name: http
+  selector:
+    app: {{ include "inventra.fullname" . }}-backend
