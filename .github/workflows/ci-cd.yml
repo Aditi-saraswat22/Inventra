@@ -19,9 +19,22 @@ jobs:
   backend-ci:
     name: Backend CI (Spring Boot & Java 21)
     runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: admin123
+          MYSQL_DATABASE: ims_db
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping -h localhost -u root -padmin123" --health-interval=10s --health-timeout=5s --health-retries=5
     defaults:
       run:
         working-directory: backend/InventoryMgtSys
+    env:
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/ims_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: admin123
 
     steps:
       - name: Checkout Code
@@ -101,9 +114,9 @@ jobs:
       - name: Set up Helm
         uses: azure/setup-helm@v4
 
-      - name: Validate K8s Manifests (Dry Run)
+      - name: Validate K8s Manifests with Kustomize
         run: |
-          kubectl apply --dry-run=client -k k8s/
+          kubectl kustomize k8s/
 
       - name: Lint Helm Chart
         run: |
@@ -121,6 +134,12 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+
+      - name: Lowercase Repository Owner for Docker Tagging
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >> ${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -140,8 +159,8 @@ jobs:
           file: ./backend/Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/inventra-backend:${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/inventra-backend:latest
+            ghcr.io/${{ env.OWNER_LC }}/inventra-backend:${{ github.sha }}
+            ghcr.io/${{ env.OWNER_LC }}/inventra-backend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -155,7 +174,7 @@ jobs:
             VITE_API_BASE_URL=/api
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/inventra-frontend:${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/inventra-frontend:latest
+            ghcr.io/${{ env.OWNER_LC }}/inventra-frontend:${{ github.sha }}
+            ghcr.io/${{ env.OWNER_LC }}/inventra-frontend:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
